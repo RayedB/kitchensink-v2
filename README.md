@@ -1,5 +1,7 @@
 # kitchensink
 
+To read about Migration Methodology, please refer to the [Migration Methodology](docs/migration-methodology.md) document.
+
 This project uses Quarkus, the Supersonic Subatomic Java Framework.
 
 If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
