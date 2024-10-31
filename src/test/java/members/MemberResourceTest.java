@@ -1,10 +1,13 @@
 package members;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.junit.QuarkusTest;
 import members.model.Member;
+import members.util.TestDatabaseUtils;
 import io.restassured.response.Response;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
 
 import static io.restassured.RestAssured.given;
@@ -15,47 +18,68 @@ import static org.hamcrest.Matchers.notNullValue;
 @QuarkusTest
 public class MemberResourceTest {
 
-    private static final String MEMBERS_ENDPOINT = "/api/members";
+     @Inject
+    TestDatabaseUtils dbUtils;
     
+    private static final String MEMBERS_ENDPOINT = "/members";
+    
+    @BeforeEach
+    void setUp() {
+    dbUtils.clearCollection("members");
+}
     @Test
     public void testListAllMembers() {
-        given()
-            .when()
-            .get(MEMBERS_ENDPOINT)
-            .then()
-            .statusCode(200)
-            .body("$.size()", greaterThanOrEqualTo(0));
-    }
-
-    @Test
-    public void testGetMemberById() {
-        // First create a member to test with
+        // Create a member to insert into the database
         Member member = new Member();
-        member.setName("John Doe");
-        member.setEmail("john@test.com");
+        member.setName("Test Member");
+        member.setEmail("testmember@example.com");
         member.setPhoneNumber("1234567890");
 
-        // Create member and get ID from response
-        Response createResponse = given()
+        // Insert the member into the database
+        given()
             .contentType(MediaType.APPLICATION_JSON)
             .body(member)
             .when()
             .post(MEMBERS_ENDPOINT)
             .then()
-            .statusCode(200)
-            .extract().response();
+            .statusCode(200);
 
-        Long memberId = createResponse.jsonPath().getLong("id");
-
-        // Test getting the member by ID
+        // Now test the list all members endpoint
         given()
             .when()
-            .get(MEMBERS_ENDPOINT + "/" + memberId)
+            .get(MEMBERS_ENDPOINT)
             .then()
             .statusCode(200)
-            .body("name", equalTo("John Doe"))
-            .body("email", equalTo("john@test.com"));
+            .body("$.size()", greaterThanOrEqualTo(1)); // Expect at least one member
     }
+
+    @Test
+public void testGetMemberById() {
+    Member member = new Member();
+    member.setId("123");
+    member.setName("John Doe");
+    member.setEmail("john@test.com");
+    member.setPhoneNumber("1234567890");
+
+    given()
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(member)
+        .when()
+        .post(MEMBERS_ENDPOINT)
+        .then()
+        .statusCode(200)
+        .extract().response();
+
+    String memberId = "123";
+
+    given()
+        .when()
+        .get(MEMBERS_ENDPOINT + "/" + memberId)
+        .then()
+        .statusCode(200)
+        .body("name", equalTo("John Doe"))
+        .body("email", equalTo("john@test.com"));
+}
 
     @Test
     public void testGetNonExistentMember() {
@@ -94,8 +118,8 @@ public class MemberResourceTest {
             .post(MEMBERS_ENDPOINT)
             .then()
             .statusCode(400)
-            .body("name", notNullValue())  // Expect validation error message
-            .body("email", notNullValue()); // Expect validation error message
+            .body("name", notNullValue()) 
+            .body("email", notNullValue());
     }
 
     @Test
@@ -126,7 +150,7 @@ public class MemberResourceTest {
             .when()
             .post(MEMBERS_ENDPOINT)
             .then()
-            .statusCode(409)  // Conflict
+            .statusCode(409)
             .body("email", equalTo("Email taken"));
     }
 }

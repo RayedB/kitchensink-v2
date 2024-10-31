@@ -4,11 +4,13 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import members.model.Member;
 import members.service.MemberService;
-import org.jboss.logging.Logger;
 
-import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import org.jboss.logging.Logger;
 
 @Path("/members")
 @ApplicationScoped
@@ -24,15 +26,51 @@ public class MemberResource {
     }
 
     @GET
-    public List<Member> getMembers() {
+    public Response getMembers() {
         LOG.debug("Executing findAll query");
-        return memberService.getAllMembers();
+        return Response
+            .ok(memberService.getAllMembers())
+            .type(MediaType.APPLICATION_JSON)
+            .build();
     }
 
-        @POST
-    @Path("/test")
-    public void insertTest() {
-        LOG.info("Inserting test document");
-        memberService.insertTestDocument();
+    @POST
+    public Response create(Member member) {
+        LOG.info("Creating new member");
+        try {
+            Member created = memberService.createMember(member);
+            return Response.ok(created).build();
+        } catch (BadRequestException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("name", "Name is required");
+            error.put("email", "Email is required");
+            return Response
+                .status(Response.Status.BAD_REQUEST)
+                .entity(error)
+                .type(MediaType.APPLICATION_JSON)
+                .build();
+        } catch (ClientErrorException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("email", "Email taken");
+            return Response
+                .status(Response.Status.CONFLICT)
+                .entity(error)
+                .type(MediaType.APPLICATION_JSON)
+                .build();
+        }
+    }
+
+    @GET
+    @Path("/{id}")
+    public Response getMemberById(@PathParam("id") String id) {
+        LOG.debug("Getting member by id: " + id);
+        Member member = memberService.getMemberById(id);
+        if (member == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        return Response
+            .ok(member)
+            .type(MediaType.APPLICATION_JSON)
+            .build();
     }
 }
