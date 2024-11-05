@@ -67,7 +67,8 @@ Generate integration tests for the target app
 
 ### Step 5: Code module in the target app
 
-Hypothesis (Java driver vs Spring data)
+I have selected Quarkus as the target app because it is a modern and composable framework that offers a lot of features out of the box.
+Spring boot would have been probably a more Enterprise Ready framework and would have been acceptable as well.
 
 ### Step 6: Code translator module (not applicable in this challenge)
 
