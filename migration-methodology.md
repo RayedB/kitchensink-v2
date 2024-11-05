@@ -1,17 +1,29 @@
-Here's your document formatted in Markdown:
-
 # Hypothesis
+
 **Assumptions**:
+
 - The legacy app is working as expected, and we can inject logs into it.
+- The legacy app is behind a API Gateway/load balancer upon which we can edit some rules.
 - The target app is working as expected, and we need to migrate the data from the legacy app to the target app.
 - The target app is using Quarkus.
 - We need to replicate 1:1 the business logic of the legacy app.
 - There are no stored procedures, triggers, or remote method invocation in the legacy app.
-- The legacy app can afford downtime for the migration if it is done at night or over the weekend.
+- The legacy cannot afford downtime.
 
 ## Migration Methodology
 
+The selected option for migrating this application is to lambda loading at the api-gateway level.
+During the assessment phase, it is possible to take an incoming request and feed it parallelly to the legacy app and the target app so we can run integration tests and check integrity of the data on each system.
+
+Once the team is confident about the implementation of the target app, we can redirect the requests to the target app only.
+
+In a real world scenario, there might be some Anti Corruption Layer, or "Translator" that would make sure legacy apps querying the gateway still offer the same contract as the legacy app offered.
+It would be in a separate container as this is a "disposable" component that would be stopped once the legacy apps have been modernized or replaced to query directly the target app.
+
+For this exercise I decided to create a nodejs express script that would act as load-balancer to perform the Dark Pattern, propagating the request to both the legacy and modern app
+
 ### Step 1: Setup the legacy environment
+
 **Purpose**: Create a replicable version of the legacy app on a developer's machine.
 Ideally dockerize the legacy app.
 For this challenge, I opted to run the legacy app locally without docker, using the latest version of Wildfly, Java 11 and Maven 3.8.8
@@ -43,18 +55,30 @@ For this challenge, I opted to run the legacy app locally without docker, using 
 
 See the code in this repository
 
-
 ### Step 4: Generate integration tests
 
-## Legacy app
+#### Legacy app
+
 Based on logs, generate integration tests for legacy app (running locally)
 
-## Target app
+#### Target app
+
 Generate integration tests for the target app
 
 ### Step 5: Code module in the target app
+
 Hypothesis (Java driver vs Spring data)
 
 ### Step 6: Code translator module
 
-### Step 7: Batch migrate
+### Step 7: Migrate data at runtime
+
+**Purpose**: Make historical data available to the new system without requiring too much downtime.
+
+**Tasks**:
+
+- For each Member creation into legacy app, create a Member in the target app
+- For each /GET/:id into the target app, if the member does not exist, query the legacy app, store the result in the target app and return the result
+
+### Step 8: Migrate non-queried data as batches (not applicable for this challenge)
+Using Relational Migrator, migrate data from legacyDB to MongoDB
