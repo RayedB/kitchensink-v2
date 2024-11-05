@@ -84,7 +84,7 @@ However since this contract is purely existant because of the legacy ecosystem a
 **Tasks**:
 
 - For each Member creation into legacy app, create a Member in the target app
-- For each /GET/:id into the target app, if the member does not exist, query the legacy app, store the result in the target app and return the result
+- For each `/GET/:id` into the target app, if the member does not exist, query the legacy app, store the result in the target app and return the result
 
 ### Step 8: Migrate non-queried data as batches (not applicable for this challenge)
 Using Relational Migrator, migrate data from legacyDB to MongoDB
