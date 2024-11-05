@@ -69,7 +69,12 @@ Generate integration tests for the target app
 
 Hypothesis (Java driver vs Spring data)
 
-### Step 6: Code translator module
+### Step 6: Code translator module (not applicable in this challenge)
+
+In a real world scenario, there are some App/API contracts that legacy apps have when interacting with the application we are modernizing.
+Respecting this contract is necessary to allow a smooth migration without requiring all the ecosystem to make too many changes.
+
+However since this contract is purely existant because of the legacy ecosystem and doesn't have business benefits in a modernized way, it is a good practice to create this "adapter" module as a separate software. This way we would be able to dispose of the translator module and we don't have legacy related code "polluting" our modernized codebase.
 
 ### Step 7: Migrate data at runtime
 
